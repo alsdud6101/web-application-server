@@ -1,10 +1,14 @@
 package webserver;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.file.Files;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +28,28 @@ public class RequestHandler extends Thread {
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
+        BufferedReader br = new BufferedReader(new InputStreamReader(in,"UTF-8"));
+        
+        String line = br.readLine();
+        log.debug("request line: {}",line);
+        
+        if(line==null) {
+        		return ;
+        }
+        
+        String[] tokens = line.split(" ");
+        
+        
+        while(!line.equals("")) {
+        		line = br.readLine();
+        		log.debug("header : {}",line);
+        		
+        		
+        }
+        	
             DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = "Hello World".getBytes();
+            byte[] body = Files.readAllBytes(new File("./webapp"+tokens[1]).toPath());
+            
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
@@ -47,7 +71,7 @@ public class RequestHandler extends Thread {
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
-            dos.flush();
+            dos.flush();//버퍼에 저장 되기 때문에 flush를 입력해서 완료를 표시해 주어야 한다.
         } catch (IOException e) {
             log.error(e.getMessage());
         }
